@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura: Your Emotional Support AI</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- Custom CSS for Styling (replacing style.css) --- */
+        /* Custom scrollbar for better aesthetics */
+        #chat-window::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-window::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1; /* soft gray */
+            border-radius: 3px;
+        }
+        #chat-window::-webkit-scrollbar-track {
+            background: #f8fafc; /* near white */
+        }
+        /* Style for the button icon animation */
+        #send-button svg {
+            transition: transform 0.2s ease-in-out;
+        }
+        #send-button:hover svg {
+            transform: translateX(3px);
+        }
+        /* Custom font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <script>
+        // Tailwind Configuration for Custom Colors (replacing custom CSS color variables)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#4c51bf', /* Indigo/Violet for a calm, introspective feel */
+                        'primary-light': '#e0e7ff', /* Very light blue for AI background */
+                        'user-bubble': '#6366f1', /* Blue-violet for user messages */
+                        'aura-bubble': '#f1f5f9', /* Soft gray for Aura messages */
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Chat Container (HTML Structure) -->
+    <div class="w-full max-w-2xl bg-white shadow-2xl rounded-3xl flex flex-col h-[90vh] md:h-[80vh] overflow-hidden">
+        
+        <!-- Header -->
+        <header class="p-4 bg-primary-blue text-white shadow-md flex items-center rounded-t-3xl">
+            <!-- Simple SVG Logo for Aura -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+            <h1 class="text-xl font-semibold">Aura: Emotional Support AI</h1>
+        </header>
+
+        <!-- Chat Window -->
+        <div id="chat-window" class="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-50">
+            <!-- Initial Greeting Message -->
+            <div class="flex justify-start">
+                <div class="bg-primary-light text-gray-800 p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-sm">
+                    <p class="font-medium text-primary-blue">Aura</p>
+                    <p>Hello. I'm Aura, a safe space for your thoughts. How are you truly feeling right now? Please feel free to share anything that's on your mind.</p>
+                </div>
+            </div>
+            <!-- Messages will be injected here -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 border-t border-gray-200 bg-white">
+            <div class="flex items-center space-x-3">
+                <input type="text" id="user-input" placeholder="Type your feelings or thoughts here..."
+                       class="flex-grow p-3 border border-gray-300 rounded-full focus:ring-primary-blue focus:border-primary-blue transition duration-150 ease-in-out text-base"
+                       onkeydown="if(event.key === 'Enter') sendMessage()">
+                
+                <button id="send-button" onclick="sendMessage()"
+                        class="bg-user-bubble text-white p-3 rounded-full shadow-lg hover:bg-primary-blue transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 disabled:bg-gray-400"
+                        title="Send Message">
+                    <!-- Send Icon (Lucide-like SVG) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+            <div id="error-message" class="text-red-500 text-sm mt-2 hidden"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (replacing app.js) -->
+    <script>
+        // --- FIX APPLIED HERE ---
+        // Change the API endpoint to reference the Python file's internal hostname/port.
+        const API_ENDPOINT = 'http://app.py:5000/chat'; 
+        // -------------------------
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const errorMessageDiv = document.getElementById('error-message');
+
+        // The conversation history will store messages in the format required by the Gemini API
+        // [{role: 'user', parts: [{text: '...'}]}, {role: 'model', parts: [{text: '...'}]}]
+        let conversationHistory = [];
+        let isWaitingForResponse = false;
+
+        // --- Helper Functions ---
+
+        /**
+         * Creates and appends a message bubble to the chat window.
+         * @param {string} text The message content.
+         * @param {string} role 'user' or 'model'
+         * @param {boolean} isTypingIndicator If true, this is the loading indicator.
+         */
+        function appendMessage(text, role, isTypingIndicator = false) {
+            const container = document.createElement('div');
+            const bubble = document.createElement('div');
+            
+            if (role === 'user') {
+                container.className = 'flex justify-end';
+                bubble.className = 'bg-user-bubble text-white p-3 rounded-xl rounded-br-none max-w-[80%] shadow-md';
+            } else {
+                container.className = 'flex justify-start';
+                bubble.className = 'bg-aura-bubble text-gray-800 p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-md';
+                if (!isTypingIndicator) {
+                    // Add Aura's name for clarity
+                    const name = document.createElement('p');
+                    name.className = 'font-medium text-primary-blue mb-1';
+                    name.textContent = 'Aura';
+                    bubble.appendChild(name);
+                }
+            }
+
+            if (isTypingIndicator) {
+                bubble.className = 'bg-aura-bubble p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-md';
+                // Three pulsing dots for a clean loading effect
+                bubble.innerHTML = '<div class="typing-indicator flex space-x-1"><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0s;"></div><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div></div>';
+            } else {
+                const textNode = document.createElement('p');
+                textNode.textContent = text;
+                bubble.appendChild(textNode);
+            }
+
+            container.appendChild(bubble);
+            chatWindow.appendChild(container);
+            
+            // Scroll to the bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return container;
+        }
+
+        /**
+         * Handles sending the user message and fetching the AI response.
+         */
+        async function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (!messageText || isWaitingForResponse) return;
+
+            // 1. Disable input and button
+            isWaitingForResponse = true;
+            userInput.value = '';
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            errorMessageDiv.classList.add('hidden');
+
+            // 2. Display user message and add to history
+            appendMessage(messageText, 'user');
+            conversationHistory.push({ role: 'user', parts: [{ text: messageText }] });
+
+            // 3. Display typing indicator
+            const loadingIndicator = appendMessage('', 'model', true);
+
+            try {
+                // 4. Send history to backend
+                const response = await fetchWithRetry(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: conversationHistory })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponseText = data.text;
+                
+                // 5. Remove loading indicator
+                chatWindow.removeChild(loadingIndicator);
+
+                // 6. Display AI message and add to history
+                appendMessage(aiResponseText, 'model');
+                conversationHistory.push({ role: 'model', parts: [{ text: aiResponseText }] });
+
+            } catch (error) {
+                console.error('Chat error:', error);
+                
+                // 5. Remove loading indicator and display error
+                if (chatWindow.contains(loadingIndicator)) {
+                    chatWindow.removeChild(loadingIndicator);
+                }
+                
+                const fallbackMessage = "I apologize, I lost connection for a moment. Please take a deep breath and try sending your message again when you're ready.";
+                appendMessage(fallbackMessage, 'model');
+                
+                errorMessageDiv.textContent = 'Connection Error: Could not reach the AI server.';
+                errorMessageDiv.classList.remove('hidden');
+                
+                // Remove the last user message from history so it can be retried without confusion
+                conversationHistory.pop(); 
+            } finally {
+                // 7. Re-enable input
+                isWaitingForResponse = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        /**
+         * Simple fetch wrapper with exponential backoff for resilience.
+         */
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            let delay = 1000; // 1 second
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429 && i < maxRetries - 1) {
+                        // Too Many Requests, try again later
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    return response;
+                } catch (error) {
+                    if (i < maxRetries - 1) {
+                        // Connection error, wait and retry
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+            throw new Error('Fetch failed after all retries.');
+        }
+
+        // Initialize focus on load
+        window.onload = () => {
+            userInput.focus();
+        }
+
+        // --- Initial Auth Setup (Required for all Canvas Firebase/Auth apps, even if not used) ---
+        async function initializeAuth() {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        }
+        
+        initializeAuth();
+        
+    </script>
+</body>
+</html>
