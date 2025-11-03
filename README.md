@@ -34,6 +34,8 @@ With a minimalist ChatGPT-style interface and cute, floating emojis, SnuggBot br
 | Muted | `#7B7B72` | Subtle secondary text |
 
 ---
+<img width="1842" height="922" alt="image" src="https://github.com/user-attachments/assets/3c4f21c8-8c18-4fa1-8e95-c77bdb457e3b" />
+
 
 ## 🧩 Tech Stack
 
