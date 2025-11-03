@@ -1,3 +1,4 @@
+# Jai Gangadhar Gaikwad : IIT Kanpur, Chemical Department
 # 🤗 SnuggBot — Your Snuggly AI Pal
 
 Welcome to **SnuggBot**, a cozy and friendly AI chat interface built with **HTML, CSS, and JavaScript**.  
