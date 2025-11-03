@@ -43,3 +43,5 @@ With a minimalist ChatGPT-style interface and cute, floating emojis, SnuggBot br
 - *(Optional)* **Backend API** — `/chat` endpoint for AI responses (Flask / Node.js / FastAPI / Groq etc.)
 
 ---
+<img width="1918" height="1007" alt="image" src="https://github.com/user-attachments/assets/b5f8eade-9a55-4e62-b07b-cfa84e24c1f0" />
+
