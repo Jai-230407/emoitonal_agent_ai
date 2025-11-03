@@ -1,273 +1,249 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura: Your Emotional Support AI</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* --- Custom CSS for Styling (replacing style.css) --- */
-        /* Custom scrollbar for better aesthetics */
-        #chat-window::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-window::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1; /* soft gray */
-            border-radius: 3px;
-        }
-        #chat-window::-webkit-scrollbar-track {
-            background: #f8fafc; /* near white */
-        }
-        /* Style for the button icon animation */
-        #send-button svg {
-            transition: transform 0.2s ease-in-out;
-        }
-        #send-button:hover svg {
-            transform: translateX(3px);
-        }
-        /* Custom font */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
-    <script>
-        // Tailwind Configuration for Custom Colors (replacing custom CSS color variables)
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-blue': '#4c51bf', /* Indigo/Violet for a calm, introspective feel */
-                        'primary-light': '#e0e7ff', /* Very light blue for AI background */
-                        'user-bubble': '#6366f1', /* Blue-violet for user messages */
-                        'aura-bubble': '#f1f5f9', /* Soft gray for Aura messages */
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aura — Emotional AI</title>
+  <style>
+    /* -------------------------
+       Base + layout
+       ------------------------- */
+    :root{
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #9aa4b2;
+      --accent: #7c5cff;
+      --accent-2: #2dd4bf;
+      --me: #1f2937;
+      --glass: rgba(255,255,255,0.04);
+      --success: #10b981;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:
+      linear-gradient(180deg,#071029 0%,var(--bg) 100%);color:#e6eef6}
+    .wrap{max-width:980px;margin:36px auto;padding:20px; display:grid;
+          grid-template-columns: 360px 1fr; gap:20px; align-items:start}
+    @media (max-width:900px){ .wrap{grid-template-columns:1fr;padding:12px} }
+
+    /* -------------------------
+       Left panel (info)
+       ------------------------- */
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+      border-radius:18px;padding:20px;box-shadow:0 6px 18px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .brand {display:flex; gap:12px; align-items:center}
+    .logo {
+      width:56px;height:56px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent), #5eead4);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      color:#051022; font-size:22px; box-shadow:0 6px 20px rgba(124,92,255,0.18)
+    }
+    h1{font-size:18px;margin:6px 0 0}
+    p.muted{color:var(--muted); font-size:13px; line-height:1.45}
+    .small{font-size:12px;color:var(--muted);margin-top:10px}
+
+    /* -------------------------
+       Chat board (right)
+       ------------------------- */
+    .chat-card{background:linear-gradient(180deg,var(--card), rgba(0,0,0,0.06));
+               border-radius:18px;padding:18px;height:72vh;display:flex;flex-direction:column;
+               border:1px solid rgba(255,255,255,0.03)}
+    @media (max-width:900px){ .chat-card{height:68vh} }
+
+    .messages {flex:1; overflow:auto; padding-right:8px; display:flex; flex-direction:column; gap:12px}
+    .message {max-width:78%; padding:12px 14px;border-radius:14px;line-height:1.45}
+    .message.user{align-self:flex-end;background:linear-gradient(180deg,var(--me),#111827); color:#e6eef6; border-bottom-right-radius:4px;}
+    .message.ai{align-self:flex-start;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02)); color:#eaf2ff;}
+    .meta{font-size:12px;color:var(--muted); margin-bottom:6px}
+
+    .controls {display:flex; gap:8px; align-items:center; margin-top:12px}
+    textarea#input{flex:1; min-height:56px; max-height:160px; resize:none;
+                  padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);
+                  background:var(--glass); color:inherit; outline:none; font-size:14px}
+    button#send{background:linear-gradient(90deg,var(--accent),var(--accent-2)); border:none;padding:12px 16px;border-radius:12px;
+                color:#051022;font-weight:600; cursor:pointer; box-shadow:0 8px 22px rgba(124,92,255,0.16)}
+    button#send[disabled]{opacity:0.6; cursor:default}
+
+    .status {font-size:13px;color:var(--muted); display:flex; gap:8px; align-items:center}
+    .chip{background:rgba(255,255,255,0.03); padding:8px 12px;border-radius:999px; font-size:13px; color:var(--muted)}
+
+    /* spinner */
+    .spinner{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.12); border-top-color:var(--accent);
+             animation:spin 1s linear infinite; display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* tiny helper */
+    .hint{font-size:13px;color:var(--muted); margin-top:10px}
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-
-    <!-- Main Chat Container (HTML Structure) -->
-    <div class="w-full max-w-2xl bg-white shadow-2xl rounded-3xl flex flex-col h-[90vh] md:h-[80vh] overflow-hidden">
-        
-        <!-- Header -->
-        <header class="p-4 bg-primary-blue text-white shadow-md flex items-center rounded-t-3xl">
-            <!-- Simple SVG Logo for Aura -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 mr-3">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                <line x1="15" y1="9" x2="15.01" y2="9"></line>
-            </svg>
-            <h1 class="text-xl font-semibold">Aura: Emotional Support AI</h1>
-        </header>
-
-        <!-- Chat Window -->
-        <div id="chat-window" class="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-50">
-            <!-- Initial Greeting Message -->
-            <div class="flex justify-start">
-                <div class="bg-primary-light text-gray-800 p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-sm">
-                    <p class="font-medium text-primary-blue">Aura</p>
-                    <p>Hello. I'm Aura, a safe space for your thoughts. How are you truly feeling right now? Please feel free to share anything that's on your mind.</p>
-                </div>
-            </div>
-            <!-- Messages will be injected here -->
+<body>
+  <div class="wrap">
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <div class="brand">
+        <div class="logo">A</div>
+        <div>
+          <h1>Aura — Emotional AI</h1>
+          <p class="muted">A compassionate, non-judgmental AI designed to listen and reflect. Built for calm, short interactions.</p>
         </div>
+      </div>
 
-        <!-- Input Area -->
-        <div class="p-4 border-t border-gray-200 bg-white">
-            <div class="flex items-center space-x-3">
-                <input type="text" id="user-input" placeholder="Type your feelings or thoughts here..."
-                       class="flex-grow p-3 border border-gray-300 rounded-full focus:ring-primary-blue focus:border-primary-blue transition duration-150 ease-in-out text-base"
-                       onkeydown="if(event.key === 'Enter') sendMessage()">
-                
-                <button id="send-button" onclick="sendMessage()"
-                        class="bg-user-bubble text-white p-3 rounded-full shadow-lg hover:bg-primary-blue transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 disabled:bg-gray-400"
-                        title="Send Message">
-                    <!-- Send Icon (Lucide-like SVG) -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                </button>
-            </div>
-            <div id="error-message" class="text-red-500 text-sm mt-2 hidden"></div>
-        </div>
+      <div class="small">
+        <div style="margin-top:14px;"><strong>Tips</strong></div>
+        <ul style="padding-left:18px;margin:8px 0;color:var(--muted)">
+          <li>Describe how you feel briefly.</li>
+          <li>Aura will reflect and ask a gentle follow-up.</li>
+          <li>For urgent medical or safety concerns, contact professionals — Aura is not a substitute for help.</li>
+        </ul>
+
+        <div class="hint">Status: <span id="server-status" class="chip">Checking...</span></div>
+        <div class="hint" style="margin-top:12px">Local: <span class="chip">127.0.0.1:5000</span></div>
+      </div>
     </div>
 
-    <!-- JavaScript Logic (replacing app.js) -->
-    <script>
-        // --- FIX APPLIED HERE ---
-        // Change the API endpoint to reference the Python file's internal hostname/port.
-        const API_ENDPOINT = 'http://app.py:5000/chat'; 
-        // -------------------------
+    <!-- RIGHT PANEL: Chat -->
+    <div class="chat-card">
+      <div class="messages" id="messages" aria-live="polite"></div>
 
-        const chatWindow = document.getElementById('chat-window');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const errorMessageDiv = document.getElementById('error-message');
+      <div style="display:flex;flex-direction:column">
+        <div class="controls">
+          <textarea id="input" placeholder="Say something like: 'I'm feeling anxious about a presentation...'"></textarea>
+          <button id="send">Send</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div class="status" id="status-line"><span id="status-text">Ready</span></div>
+          <div class="hint">Press <strong>Enter</strong> to send, <strong>Shift+Enter</strong> for newline</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // The conversation history will store messages in the format required by the Gemini API
-        // [{role: 'user', parts: [{text: '...'}]}, {role: 'model', parts: [{text: '...'}]}]
-        let conversationHistory = [];
-        let isWaitingForResponse = false;
+  <script>
+    // -----------------------
+    // Simple chat frontend
+    // -----------------------
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const statusText = document.getElementById('status-text');
+    const serverStatus = document.getElementById('server-status');
 
-        // --- Helper Functions ---
+    // Keep a small local chat history UI
+    const addMessage = (who, text) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'message ' + (who === 'user' ? 'user' : 'ai');
 
-        /**
-         * Creates and appends a message bubble to the chat window.
-         * @param {string} text The message content.
-         * @param {string} role 'user' or 'model'
-         * @param {boolean} isTypingIndicator If true, this is the loading indicator.
-         */
-        function appendMessage(text, role, isTypingIndicator = false) {
-            const container = document.createElement('div');
-            const bubble = document.createElement('div');
-            
-            if (role === 'user') {
-                container.className = 'flex justify-end';
-                bubble.className = 'bg-user-bubble text-white p-3 rounded-xl rounded-br-none max-w-[80%] shadow-md';
-            } else {
-                container.className = 'flex justify-start';
-                bubble.className = 'bg-aura-bubble text-gray-800 p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-md';
-                if (!isTypingIndicator) {
-                    // Add Aura's name for clarity
-                    const name = document.createElement('p');
-                    name.className = 'font-medium text-primary-blue mb-1';
-                    name.textContent = 'Aura';
-                    bubble.appendChild(name);
-                }
-            }
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = who === 'user' ? 'You' : 'Aura';
 
-            if (isTypingIndicator) {
-                bubble.className = 'bg-aura-bubble p-3 rounded-xl rounded-tl-none max-w-[80%] shadow-md';
-                // Three pulsing dots for a clean loading effect
-                bubble.innerHTML = '<div class="typing-indicator flex space-x-1"><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0s;"></div><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div><div class="dot bg-primary-blue w-2 h-2 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div></div>';
-            } else {
-                const textNode = document.createElement('p');
-                textNode.textContent = text;
-                bubble.appendChild(textNode);
-            }
+      const content = document.createElement('div');
+      content.innerHTML = text.replace(/\n/g, '<br/>');
 
-            container.appendChild(bubble);
-            chatWindow.appendChild(container);
-            
-            // Scroll to the bottom
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            return container;
+      wrap.appendChild(meta);
+      wrap.appendChild(content);
+      messagesEl.appendChild(wrap);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    };
+
+    const setStatus = (text, busy=false) => {
+      statusText.textContent = text;
+      sendBtn.disabled = !!busy;
+      if (busy) {
+        if (!document.getElementById('busy-spinner')) {
+          const s = document.createElement('span');
+          s.id = 'busy-spinner'; s.className = 'spinner'; s.style.marginLeft = '8px';
+          statusText.parentNode.appendChild(s);
+        }
+      } else {
+        const s = document.getElementById('busy-spinner');
+        if (s) s.remove();
+      }
+    };
+
+    // Send message to backend
+    async function sendMessage(rawText) {
+      const text = rawText.trim();
+      if (!text) return;
+
+      addMessage('user', escapeHtml(text));
+      inputEl.value = '';
+      setStatus('Thinking...', true);
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message: text})
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(()=>({error:res.statusText}));
+          throw new Error(err?.error || err?.details || res.statusText || 'Unknown server error');
         }
 
-        /**
-         * Handles sending the user message and fetching the AI response.
-         */
-        async function sendMessage() {
-            const messageText = userInput.value.trim();
-            if (!messageText || isWaitingForResponse) return;
+        const payload = await res.json();
+        const reply = payload.reply || payload.text || payload?.data || JSON.stringify(payload);
+        addMessage('ai', escapeHtml(String(reply)));
+        setStatus('Ready', false);
+      } catch (err) {
+        console.error('Chat error', err);
+        addMessage('ai', `<em style="color:#ffb4b4">Connection Error: Could not reach the AI server — ${escapeHtml(err.message)}</em>`);
+        setStatus('Error', false);
+      }
+    }
 
-            // 1. Disable input and button
-            isWaitingForResponse = true;
-            userInput.value = '';
-            userInput.disabled = true;
-            sendButton.disabled = true;
-            errorMessageDiv.classList.add('hidden');
+    // small helper to avoid XSS
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
 
-            // 2. Display user message and add to history
-            appendMessage(messageText, 'user');
-            conversationHistory.push({ role: 'user', parts: [{ text: messageText }] });
+    // Enter to send (Shift+Enter -> newline)
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
 
-            // 3. Display typing indicator
-            const loadingIndicator = appendMessage('', 'model', true);
+    // Send button
+    sendBtn.addEventListener('click', () => {
+      const txt = inputEl.value;
+      sendMessage(txt);
+    });
 
-            try {
-                // 4. Send history to backend
-                const response = await fetchWithRetry(API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: conversationHistory })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const aiResponseText = data.text;
-                
-                // 5. Remove loading indicator
-                chatWindow.removeChild(loadingIndicator);
-
-                // 6. Display AI message and add to history
-                appendMessage(aiResponseText, 'model');
-                conversationHistory.push({ role: 'model', parts: [{ text: aiResponseText }] });
-
-            } catch (error) {
-                console.error('Chat error:', error);
-                
-                // 5. Remove loading indicator and display error
-                if (chatWindow.contains(loadingIndicator)) {
-                    chatWindow.removeChild(loadingIndicator);
-                }
-                
-                const fallbackMessage = "I apologize, I lost connection for a moment. Please take a deep breath and try sending your message again when you're ready.";
-                appendMessage(fallbackMessage, 'model');
-                
-                errorMessageDiv.textContent = 'Connection Error: Could not reach the AI server.';
-                errorMessageDiv.classList.remove('hidden');
-                
-                // Remove the last user message from history so it can be retried without confusion
-                conversationHistory.pop(); 
-            } finally {
-                // 7. Re-enable input
-                isWaitingForResponse = false;
-                userInput.disabled = false;
-                sendButton.disabled = false;
-                userInput.focus();
-            }
+    // Ping server health endpoint
+    async function checkServer() {
+      try {
+        const r = await fetch('/');
+        if (r.ok) {
+          serverStatus.textContent = 'Online';
+          serverStatus.style.background = 'linear-gradient(90deg,var(--accent),var(--accent-2))';
+          serverStatus.style.color = '#051022';
+        } else {
+          serverStatus.textContent = 'Unreachable';
+          serverStatus.style.color = 'var(--muted)';
         }
+      } catch (e) {
+        serverStatus.textContent = 'Offline';
+        serverStatus.style.color = 'var(--muted)';
+      }
+    }
 
-        /**
-         * Simple fetch wrapper with exponential backoff for resilience.
-         */
-        async function fetchWithRetry(url, options, maxRetries = 3) {
-            let delay = 1000; // 1 second
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.status === 429 && i < maxRetries - 1) {
-                        // Too Many Requests, try again later
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    return response;
-                } catch (error) {
-                    if (i < maxRetries - 1) {
-                        // Connection error, wait and retry
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    throw error;
-                }
-            }
-            throw new Error('Fetch failed after all retries.');
-        }
+    // initial sample welcome message
+    addMessage('ai', `Hi, I'm Aura. I'm here to listen — what's been on your mind lately?`);
 
-        // Initialize focus on load
-        window.onload = () => {
-            userInput.focus();
-        }
-
-        // --- Initial Auth Setup (Required for all Canvas Firebase/Auth apps, even if not used) ---
-        async function initializeAuth() {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        }
-        
-        initializeAuth();
-        
-    </script>
+    // check server on load and every 10s
+    checkServer();
+    setInterval(checkServer, 10000);
+  </script>
 </body>
 </html>

@@ -1,17 +1,4 @@
-# import os
-# import json
-# import requests
-# from flask import Flask, request, jsonify, render_template
-# from flask_cors import CORS
-# from dotenv import load_dotenv
-
-# # --- Load environment variables from .env file ---
-# load_dotenv()
-
-# GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-# print("🔑 GROQ_API_KEY from Flask:", os.getenv("GROQ_API_KEY"))
-
-# MODEL = os.getenv("MODEL", "llama3-8b-instant")
+MODEL = os.getenv("MODEL", "llama3-8b-instant")
 # PORT = int(os.getenv("PORT", 5000))
 # MEMORY_TURNS = int(os.getenv("MEMORY_TURNS", 6))
 
@@ -99,46 +86,3 @@
 #     if not GROQ_API_KEY:
 #         raise ValueError("❌ GROQ_API_KEY not found! Please set it in your .env file.")
 #     app.run(debug=True, host='0.0.0.0', port=PORT)
-from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS
-import requests, os
-from dotenv import load_dotenv
-
-# Initialize app
-app = Flask(__name__)
-CORS(app)
-
-# Load environment variables
-load_dotenv()
-API_KEY = os.getenv("GROQ_API_KEY")
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    user_input = request.json.get("message")
-    url = "https://api.groq.com/openai/v1/chat/completions"
-
-    headers = {"Authorization": f"Bearer {API_KEY}"}
-    payload = {
-        "model": "llama-3.1-8b-instant",
-        "messages": [
-            {"role": "system", "content": "You are an empathetic AI that emotionally supports the user. Respond kindly, warmly, and with empathy."},
-            {"role": "user", "content": user_input}
-        ]
-    }
-
-    try:
-        res = requests.post(url, headers=headers, json=payload)
-        res.raise_for_status()
-        data = res.json()
-        reply = data["choices"][0]["message"]["content"]
-        return jsonify({"reply": reply})
-    except Exception as e:
-        print("[ERROR]", e)
-        return jsonify({"reply": "Sorry 😢, I couldn’t connect to the emotional AI. Please check your internet or API key."})
-
-if __name__ == "__main__":
-    app.run(debug=True)
