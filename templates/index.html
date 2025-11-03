@@ -1,249 +1,302 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aura — Emotional AI</title>
-  <style>
-    /* -------------------------
-       Base + layout
-       ------------------------- */
-    :root{
-      --bg: #0f1724;
-      --card: #0b1220;
-      --muted: #9aa4b2;
-      --accent: #7c5cff;
-      --accent-2: #2dd4bf;
-      --me: #1f2937;
-      --glass: rgba(255,255,255,0.04);
-      --success: #10b981;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-                   Roboto, "Helvetica Neue", Arial;
-    }
-    html,body{height:100%;margin:0;background:
-      linear-gradient(180deg,#071029 0%,var(--bg) 100%);color:#e6eef6}
-    .wrap{max-width:980px;margin:36px auto;padding:20px; display:grid;
-          grid-template-columns: 360px 1fr; gap:20px; align-items:start}
-    @media (max-width:900px){ .wrap{grid-template-columns:1fr;padding:12px} }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SnuggBot 🤗 — your snuggly AI pal</title>
 
-    /* -------------------------
-       Left panel (info)
-       ------------------------- */
-    .panel {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
-      border-radius:18px;padding:20px;box-shadow:0 6px 18px rgba(2,6,23,0.6);
-      border:1px solid rgba(255,255,255,0.03);
-    }
-    .brand {display:flex; gap:12px; align-items:center}
-    .logo {
-      width:56px;height:56px;border-radius:12px;
-      background:linear-gradient(135deg,var(--accent), #5eead4);
-      display:flex;align-items:center;justify-content:center;font-weight:700;
-      color:#051022; font-size:22px; box-shadow:0 6px 20px rgba(124,92,255,0.18)
-    }
-    h1{font-size:18px;margin:6px 0 0}
-    p.muted{color:var(--muted); font-size:13px; line-height:1.45}
-    .small{font-size:12px;color:var(--muted);margin-top:10px}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
-    /* -------------------------
-       Chat board (right)
-       ------------------------- */
-    .chat-card{background:linear-gradient(180deg,var(--card), rgba(0,0,0,0.06));
-               border-radius:18px;padding:18px;height:72vh;display:flex;flex-direction:column;
-               border:1px solid rgba(255,255,255,0.03)}
-    @media (max-width:900px){ .chat-card{height:68vh} }
+<style>
+:root {
+  --bg: #F9F7F3;
+  --accent: #A3D9A5;
+  --accent-dark: #5FA777;
+  --text: #2E302F;
+  --muted: #7B7B72;
+  --ai-bg: #FFFFFF;
+  --user-bg: linear-gradient(90deg, #5FA777, #4C8C66);
+  font-family: "Poppins", system-ui, sans-serif;
+}
 
-    .messages {flex:1; overflow:auto; padding-right:8px; display:flex; flex-direction:column; gap:12px}
-    .message {max-width:78%; padding:12px 14px;border-radius:14px;line-height:1.45}
-    .message.user{align-self:flex-end;background:linear-gradient(180deg,var(--me),#111827); color:#e6eef6; border-bottom-right-radius:4px;}
-    .message.ai{align-self:flex-start;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02)); color:#eaf2ff;}
-    .meta{font-size:12px;color:var(--muted); margin-bottom:6px}
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    .controls {display:flex; gap:8px; align-items:center; margin-top:12px}
-    textarea#input{flex:1; min-height:56px; max-height:160px; resize:none;
-                  padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);
-                  background:var(--glass); color:inherit; outline:none; font-size:14px}
-    button#send{background:linear-gradient(90deg,var(--accent),var(--accent-2)); border:none;padding:12px 16px;border-radius:12px;
-                color:#051022;font-weight:600; cursor:pointer; box-shadow:0 8px 22px rgba(124,92,255,0.16)}
-    button#send[disabled]{opacity:0.6; cursor:default}
+/* Background emojis */
+.bg-emojis {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.bg-emojis span {
+  position: absolute;
+  font-size: 60px;
+  opacity: 0.2;
+  user-select: none;
+  animation: float 20s infinite ease-in-out;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(10deg); }
+}
 
-    .status {font-size:13px;color:var(--muted); display:flex; gap:8px; align-items:center}
-    .chip{background:rgba(255,255,255,0.03); padding:8px 12px;border-radius:999px; font-size:13px; color:var(--muted)}
+/* Header */
+header {
+  background: var(--ai-bg);
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 2;
+}
+header .title {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+header .status {
+  font-size: 13px;
+  color: var(--muted);
+}
 
-    /* spinner */
-    .spinner{width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,0.12); border-top-color:var(--accent);
-             animation:spin 1s linear infinite; display:inline-block}
-    @keyframes spin{to{transform:rotate(360deg)}}
+/* Main */
+main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0 120px;
+  z-index: 1;
+  transition: background 0.8s ease;
+}
 
-    /* tiny helper */
-    .hint{font-size:13px;color:var(--muted); margin-top:10px}
-  </style>
+.chat-container {
+  width: 100%;
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0 20px;
+}
+
+/* Welcome screen */
+.welcome {
+  text-align: center;
+  color: var(--text);
+  z-index: 1;
+}
+.welcome h1 {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--accent-dark);
+}
+.welcome p {
+  font-size: 17px;
+  color: var(--muted);
+}
+
+/* Messages */
+.message {
+  display: flex;
+  gap: 12px;
+  line-height: 1.5;
+  animation: fadeIn 0.25s ease;
+}
+
+.message.ai {
+  align-self: flex-start;
+}
+.message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 80%;
+  white-space: pre-wrap;
+}
+
+.message.ai .bubble {
+  background: var(--ai-bg);
+  border: 1px solid rgba(0,0,0,0.05);
+  color: var(--text);
+}
+
+.message.user .bubble {
+  background: var(--user-bg);
+  color: white;
+}
+
+/* Footer */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--ai-bg);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  padding: 16px 0;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+}
+
+.input-box {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+textarea {
+  flex: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 12px;
+  font-size: 15px;
+  resize: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(163,217,165,0.3);
+}
+
+button {
+  border: none;
+  border-radius: 12px;
+  padding: 0 18px;
+  background: var(--user-bg);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.2s;
+}
+button:hover {
+  background: var(--accent-dark);
+}
+button[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(5px);}
+  to {opacity:1; transform:none;}
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- LEFT PANEL -->
-    <div class="panel">
-      <div class="brand">
-        <div class="logo">A</div>
-        <div>
-          <h1>Aura — Emotional AI</h1>
-          <p class="muted">A compassionate, non-judgmental AI designed to listen and reflect. Built for calm, short interactions.</p>
-        </div>
-      </div>
 
-      <div class="small">
-        <div style="margin-top:14px;"><strong>Tips</strong></div>
-        <ul style="padding-left:18px;margin:8px 0;color:var(--muted)">
-          <li>Describe how you feel briefly.</li>
-          <li>Aura will reflect and ask a gentle follow-up.</li>
-          <li>For urgent medical or safety concerns, contact professionals — Aura is not a substitute for help.</li>
-        </ul>
+<!-- Soft emoji background -->
+<div class="bg-emojis" id="bg-emojis">
+  <span style="top:10%;left:15%;">🤗</span>
+  <span style="top:30%;left:70%;">🌿</span>
+  <span style="top:60%;left:20%;">💚</span>
+  <span style="top:75%;left:55%;">✨</span>
+  <span style="top:40%;left:85%;">☕</span>
+</div>
 
-        <div class="hint">Status: <span id="server-status" class="chip">Checking...</span></div>
-        <div class="hint" style="margin-top:12px">Local: <span class="chip">127.0.0.1:5000</span></div>
-      </div>
-    </div>
+<header>
+  <div class="title">🤗 SnuggBot</div>
+  <div class="status" id="status-text">🟢 Online</div>
+</header>
 
-    <!-- RIGHT PANEL: Chat -->
-    <div class="chat-card">
-      <div class="messages" id="messages" aria-live="polite"></div>
-
-      <div style="display:flex;flex-direction:column">
-        <div class="controls">
-          <textarea id="input" placeholder="Say something like: 'I'm feeling anxious about a presentation...'"></textarea>
-          <button id="send">Send</button>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-          <div class="status" id="status-line"><span id="status-text">Ready</span></div>
-          <div class="hint">Press <strong>Enter</strong> to send, <strong>Shift+Enter</strong> for newline</div>
-        </div>
-      </div>
-    </div>
+<main id="main">
+  <div class="welcome" id="welcome">
+    <h1>SnuggBot 🤗</h1>
+    <p>Your cozy AI pal is waiting for your message 💬<br>Let’s have a lovely chat 🌿</p>
   </div>
+  <div class="chat-container" id="chat" style="display:none;"></div>
+</main>
 
-  <script>
-    // -----------------------
-    // Simple chat frontend
-    // -----------------------
-    const messagesEl = document.getElementById('messages');
-    const inputEl = document.getElementById('input');
-    const sendBtn = document.getElementById('send');
-    const statusText = document.getElementById('status-text');
-    const serverStatus = document.getElementById('server-status');
+<footer>
+  <div class="input-box">
+    <textarea id="input" placeholder="Type your message... (Press Enter to send)"></textarea>
+    <button id="send">Send 💚</button>
+  </div>
+</footer>
 
-    // Keep a small local chat history UI
-    const addMessage = (who, text) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'message ' + (who === 'user' ? 'user' : 'ai');
+<script>
+const chat=document.getElementById("chat");
+const main=document.getElementById("main");
+const welcome=document.getElementById("welcome");
+const input=document.getElementById("input");
+const send=document.getElementById("send");
+const statusText=document.getElementById("status-text");
+const bgEmojis=document.getElementById("bg-emojis");
 
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      meta.textContent = who === 'user' ? 'You' : 'Aura';
+function addMessage(who,text){
+  const msg=document.createElement("div");
+  msg.className="message "+who;
+  msg.innerHTML=`<div class="bubble">${text}</div>`;
+  chat.appendChild(msg);
+  chat.scrollTop=chat.scrollHeight;
+}
 
-      const content = document.createElement('div');
-      content.innerHTML = text.replace(/\n/g, '<br/>');
+function setStatus(txt,busy=false){
+  statusText.textContent=txt;
+  send.disabled=busy;
+}
 
-      wrap.appendChild(meta);
-      wrap.appendChild(content);
-      messagesEl.appendChild(wrap);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    };
+async function sendMessage(){
+  const text=input.value.trim();
+  if(!text)return;
+  
+  // Hide welcome & emojis, show chat mode
+  welcome.style.display="none";
+  bgEmojis.style.display="none";
+  chat.style.display="flex";
+  main.style.justifyContent="flex-start";
+  
+  addMessage("user",text);
+  input.value="";
+  setStatus("🟡 Thinking...",true);
+  try{
+    const r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});
+    const data=await r.json();
+    const reply=data.reply||data.text||"I’m always here to listen 🤗";
+    addMessage("ai",reply);
+    setStatus("🟢 Online",false);
+  }catch(e){
+    addMessage("ai","⚠️ Connection issue, but I’m still here with you 💚");
+    setStatus("🔴 Offline",false);
+  }
+}
 
-    const setStatus = (text, busy=false) => {
-      statusText.textContent = text;
-      sendBtn.disabled = !!busy;
-      if (busy) {
-        if (!document.getElementById('busy-spinner')) {
-          const s = document.createElement('span');
-          s.id = 'busy-spinner'; s.className = 'spinner'; s.style.marginLeft = '8px';
-          statusText.parentNode.appendChild(s);
-        }
-      } else {
-        const s = document.getElementById('busy-spinner');
-        if (s) s.remove();
-      }
-    };
-
-    // Send message to backend
-    async function sendMessage(rawText) {
-      const text = rawText.trim();
-      if (!text) return;
-
-      addMessage('user', escapeHtml(text));
-      inputEl.value = '';
-      setStatus('Thinking...', true);
-
-      try {
-        const res = await fetch('/chat', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: text})
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(()=>({error:res.statusText}));
-          throw new Error(err?.error || err?.details || res.statusText || 'Unknown server error');
-        }
-
-        const payload = await res.json();
-        const reply = payload.reply || payload.text || payload?.data || JSON.stringify(payload);
-        addMessage('ai', escapeHtml(String(reply)));
-        setStatus('Ready', false);
-      } catch (err) {
-        console.error('Chat error', err);
-        addMessage('ai', `<em style="color:#ffb4b4">Connection Error: Could not reach the AI server — ${escapeHtml(err.message)}</em>`);
-        setStatus('Error', false);
-      }
-    }
-
-    // small helper to avoid XSS
-    function escapeHtml(unsafe) {
-      return unsafe
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#039;');
-    }
-
-    // Enter to send (Shift+Enter -> newline)
-    inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendBtn.click();
-      }
-    });
-
-    // Send button
-    sendBtn.addEventListener('click', () => {
-      const txt = inputEl.value;
-      sendMessage(txt);
-    });
-
-    // Ping server health endpoint
-    async function checkServer() {
-      try {
-        const r = await fetch('/');
-        if (r.ok) {
-          serverStatus.textContent = 'Online';
-          serverStatus.style.background = 'linear-gradient(90deg,var(--accent),var(--accent-2))';
-          serverStatus.style.color = '#051022';
-        } else {
-          serverStatus.textContent = 'Unreachable';
-          serverStatus.style.color = 'var(--muted)';
-        }
-      } catch (e) {
-        serverStatus.textContent = 'Offline';
-        serverStatus.style.color = 'var(--muted)';
-      }
-    }
-
-    // initial sample welcome message
-    addMessage('ai', `Hi, I'm Aura. I'm here to listen — what's been on your mind lately?`);
-
-    // check server on load and every 10s
-    checkServer();
-    setInterval(checkServer, 10000);
-  </script>
+send.addEventListener("click",sendMessage);
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
 </body>
 </html>
